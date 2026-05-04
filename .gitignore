@@ -1,33 +1,39 @@
-# Byte-compiled / optimized / DLL files
+# --- Python / Environment ---
 __pycache__/
 *.pyc
-
-# PyTorch / Model checkpoints
-# *.pth
-
-# Environment variables
 .env
+venv/
+.venv/
+env/
 
-# Large media and data
-data/videos/
-data/images/
+# --- Data Directory Logic ---
+# Ignore all content inside these folders
+data/videos/*
+data/dataset_level1/train/*
+data/dataset_level1/val/*
 
+# Explicitly allow .gitkeep files so folders stay in the repo
+!data/videos/.gitkeep
+!data/dataset_level1/train/.gitkeep
+!data/dataset_level1/val/.gitkeep
 
-# Images
+# --- Global Media / Large Files ---
+# These are blocked everywhere in the project
+*.mp4
+*.mov
+*.avi
+*.mkv
 *.jpg
 *.jpeg
 *.png
 *.gif
 *.bmp
 
-# Videos
-*.mp4
-*.mov
-*.avi
-*.mkv
-
-# Checkpoints / Models
+# --- Models ---
+# Keeping .pth and .pt files (uncomment to ignore them)
 # *.pth
 # *.pt
-# *.ckpt
 *.h5
+
+# --- OS Specific ---
+.DS_Store
