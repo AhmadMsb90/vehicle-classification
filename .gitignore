@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+
+# PyTorch / Model checkpoints
+# *.pth
+
+# Environment variables
+.env
+
+# Large media and data
+data/videos/
+data/images/
+
+
+# Images
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+
+# Videos
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# Checkpoints / Models
+# *.pth
+# *.pt
+# *.ckpt
+*.h5
