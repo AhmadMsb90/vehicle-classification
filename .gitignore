@@ -6,19 +6,12 @@ venv/
 .venv/
 env/
 
-# --- Data Directory Logic ---
-# Ignore all content inside these folders
-data/videos/*
-data/dataset_level1/train/*
-data/dataset_level1/val/*
 
-# Explicitly allow .gitkeep files so folders stay in the repo
-!data/videos/.gitkeep
-!data/dataset_level1/train/.gitkeep
-!data/dataset_level1/val/.gitkeep
+
+# 3. Explicitly allow the .gitkeep files to be tracked
+!**/ .gitkeep
 
 # --- Global Media / Large Files ---
-# These are blocked everywhere in the project
 *.mp4
 *.mov
 *.avi
@@ -30,7 +23,6 @@ data/dataset_level1/val/*
 *.bmp
 
 # --- Models ---
-# Keeping .pth and .pt files (uncomment to ignore them)
 # *.pth
 # *.pt
 *.h5
