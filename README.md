@@ -179,6 +179,22 @@ python -m scripts.train --level level2
 - Train classifier head only
 - Evaluate on validation set
 
+
+### Training Results
+
+#### Level 1 (Light vs Heavy)
+
+The Level 1 classifier converges quickly and achieves strong performance, reaching 97% validation accuracy. This indicates that the model can reliably distinguish between light and heavy vehicles under the given dataset conditions.
+
+#### Level 2 (Light Vehicle Models)
+
+The Level 2 classifier performs fine-grained classification across 13 light vehicle models. The model reaches 70% validation accuracy, showing steady learning progress while reflecting the higher difficulty of distinguishing between visually similar vehicle classes.
+
+
+
+
+
+
 Trained models are saved inside the `models/` directory.
 
 ## Inference
