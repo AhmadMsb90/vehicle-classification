@@ -103,14 +103,10 @@ Main dependencies:
 - pillow
 - tqdm
 
-## Notes
 
-The system is modular and designed to allow extension to multi-class classification or multi-stage hierarchical classification. It is optimized for GPU execution but can run on CPU with reduced performance.
+## Sample Results
 
-## Future Improvements
-
-- Multi-class vehicle classification
-- Tracking across frames
-- Speed estimation
-- Lane-based analytics
-- Edge deployment optimization
+<p align="center">
+  <img src="assets/light_vehicle.png" width="45%" />
+  <img src="assets/heavy_vehicle.png" width="45%" />
+</p>
