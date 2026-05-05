@@ -1,25 +1,33 @@
 # Vehicle Detection and Classification Pipeline
 
-This project implements a two-stage computer vision pipeline for vehicle analysis in video streams. It combines YOLOv8 for object detection and a ResNet18-based classifier for vehicle type classification.
+This project implements a two-stage pipeline for vehicle detection and classification in a video. It combines YOLOv8 for object detection and ResNet18-based classifiers for vehicle classification.
 
-The system processes video frames, detects vehicles, extracts bounding boxes, and classifies each detected region as either light or heavy.
+The system processes video frames, detects vehicles, extracts bounding boxes, and classifies each detected region. A two-level classification setup is supported:
+- Level 1: light vs heavy vehicle classification
+- Level 2: fine-grained classification of light vehicle models
 
 ## Project Structure
 
 ```
 vehicle-classification/
+├── assets/
+│   ├── heavy_vehicle.png
+│   └── light_vehicle.png
 ├── data/
 │   ├── dataset_level1/
 │   │   ├── train/
 │   │   └── val/
+│   ├── dataset_level2/
+│   │   ├── train/
+│   │   └── val/
 │   └── videos/
-│       └── M2U00107.mp4
 ├── models/
 │   ├── light_heavy_model.pth
+│   ├── level2_vehicle_model.pth
 │   └── yolov8n.pt
 ├── scripts/
-│   ├── run_video.py
-│   └── train.py
+│   ├── train.py
+│   └── run_video.py
 ├── src/
 │   ├── config.py
 │   ├── data/
@@ -29,20 +37,39 @@ vehicle-classification/
 │   ├── models/
 │   │   ├── classifier.py
 │   │   └── detector.py
-│   └── training/
-│       └── trainer.py
-└── main.py
+│   ├── training/
+│   │   └── trainer.py
+│   └── utils/
 ```
 
 ## Models
 
-YOLOv8 is used for vehicle detection. It outputs bounding boxes for objects detected in each frame of the video.
+YOLOv8 is used for object detection. It detects vehicles and outputs bounding boxes for each frame.
 
-A ResNet18 model is used for classification. It is fine-tuned on a custom dataset to classify vehicles into two classes: light and heavy. Only the final fully connected layer is trained while the rest of the network is frozen.
+A ResNet18 model is used for classification with two stages:
+
+- Level 1 model: binary classification (light / heavy)
+- Level 2 model: multi-class classification of light vehicle models
+
+Only the final fully connected layer is trained; the backbone is frozen during training.
 
 ## Dataset
 
-The dataset follows a standard ImageFolder structure compatible with PyTorch.
+### Dataset Description
+
+The dataset used in this project was collected from real traffic at a tollgate in Iran. A Sony SR46 DCR Handycam was mounted on a tripod at a height of approximately 10–15 meters, positioned to provide a stable front-view perspective of vehicles passing through the lane.
+
+The videos were recorded in .MPG format at a resolution of 720×576 and a frame rate of 25 FPS, resulting in approximately 2 hours and 15 minutes of footage.
+
+Recording sessions were conducted under varying environmental conditions, including cloudy, semi-sunny, and sunny weather. This introduced natural variations in lighting, shadows, and visibility.
+
+Training images were extracted from these videos by selecting frames when a vehicle fully entered a predefined region of interest. The corresponding cropped vehicle regions were then used as samples for model training.
+
+The dataset follows a PyTorch ImageFolder structure.
+
+### Level 1 dataset
+
+The Level 1 dataset is designed for binary classification of vehicles into two categories: light and heavy. It contains cropped vehicle images extracted from traffic video frames and organized using the standard train/validation split. The "light" class includes smaller passenger vehicles, while the "heavy" class includes larger vehicles such as trucks and buses. This dataset is used to train the first-stage classifier, which determines whether a detected vehicle should undergo further classification.
 
 ```
 dataset_level1/
@@ -54,55 +81,147 @@ dataset_level1/
     └── heavy/
 ```
 
-Images are resized to 224x224 and normalized using ImageNet statistics.
+### Level 2 dataset
+
+The Level 2 dataset is used for fine-grained classification of light vehicles into specific models. It contains cropped images of light vehicles only, organized into multiple classes corresponding to individual vehicle types common in Iran, including Mazda_2000, Nissan_Zamiad, various Peugeot models, Peykan, Pride variants, Quik, Renault_L90, Samand, and Tiba2. Each class represents a distinct vehicle model commonly observed in the collected traffic data. This dataset is used to train the second-stage classifier, which is applied only to vehicles classified as "light" in the first stage.
+
+```
+dataset_level2/
+├── train/
+│   ├── Mazda_2000
+│   ├── Nissan_Zamiad
+│   ├── Peugeot_206
+│   ├── Peugeot_207
+│   ├── Peugeot_405
+│   ├── Peugeot_Pars
+│   ├── Peykan
+│   ├── Pride_111
+│   ├── Pride-131
+│   ├── Quik
+│   ├── Renault_L90
+│   ├── Samand
+│   └── Tiba2
+└── val/
+    ├── Mazda_2000
+    ├── Nissan_Zamiad
+    ├── Peugeot_206
+    ├── Peugeot_207
+    ├── Peugeot_405
+    ├── Peugeot_Pars
+    ├── Peykan
+    ├── Pride_111
+    ├── Pride-131
+    ├── Quik
+    ├── Renault_L90
+    ├── Samand
+    └── Tiba2
+```
+
+
+### Dataset Statistics
+
+The data is divided into two classification levels. Each class is split into training (80%) and validation (20%) sets.
+
+#### Level 1: Category Classification
+This level distinguishes between light and heavy vehicle types for high-level traffic analysis.
+
+
+| Category | Total | Training | Validation |
+| :--- | :--- | :--- | :--- |
+| Light | 10,204 | 8,163 | 2,041 |
+| Heavy | 1,269 | 1,015 | 254 |
+| **Total** | **11,473** | **9,178** | **2,295** |
+
+#### Level 2: Model Classification
+This level identifies specific vehicle models across 13 different classes.
+
+
+| Model | Total | Training | Validation |
+| :--- | :--- | :--- | :--- |
+| Quik | 1,005 | 804 | 201 |
+| Pride 111 | 858 | 686 | 172 |
+| Samand | 849 | 679 | 170 |
+| Tiba 2 | 832 | 665 | 167 |
+| Peugeot 206 | 791 | 632 | 159 |
+| Peykan | 770 | 616 | 154 |
+| Pride 131 | 749 | 599 | 150 |
+| Peugeot Pars | 744 | 595 | 149 |
+| Peugeot 207 | 737 | 589 | 148 |
+| Renault L90 | 648 | 518 | 130 |
+| Mazda 2000 | 607 | 485 | 122 |
+| Nissan Zamiad | 597 | 477 | 120 |
+| Peugeot 405 | 592 | 473 | 119 |
+| **Total** | **8,829** | **7,063** | **1,766** |
+
+
+Images are resized to 224×224 and normalized using ImageNet statistics.
 
 ## Training
 
-Training is executed using scripts/train.py.
+Training is executed using:
 
-The training pipeline:
-- Loads dataset using PyTorch DataLoader
-- Initializes pretrained ResNet18
-- Replaces final classification layer
-- Trains only classifier head
-- Evaluates on validation set
+### Level 1 training
+```
+python -m scripts.train --level level1
+```
 
-The trained model is saved in models/light_heavy_model.pth.
+### Level 2 training
+```
+python -m scripts.train --level level2
+```
+
+### Training pipeline
+
+- Load dataset using PyTorch DataLoader
+- Initialize pretrained ResNet18
+- Replace final classification layer
+- Freeze backbone parameters
+- Train classifier head only
+- Evaluate on validation set
+
+Trained models are saved inside the `models/` directory.
 
 ## Inference
 
-Run inference using:
-
+### Level 1 inference
 ```
-python main.py --video data/videos/M2U00107.mp4
+python -m scripts.run_video --mode level1 --video data/videos/<video_name>.mp4
 ```
 
-The pipeline:
+### Level 2 inference
+```
+python -m scripts.run_video --mode level2 --video data/videos/<video_name>.mp4
+```
+
+### Inference pipeline
+
 - Reads video frame by frame
-- Runs YOLO detection on each frame
-- Extracts detected vehicle regions
-- Passes each region to classifier
-- Draws bounding boxes and labels on output frames
-- Displays real-time annotated video
+- Runs YOLOv8 object detection
+- Filters vehicle bounding boxes
+- Extracts region of interest (ROI)
+- Applies Level 1 classification (light vs heavy)
+- Applies Level 2 classification only if the vehicle is classified as light
+- Draws bounding boxes and labels
+- Displays processed video in real time
 
-Press q to exit.
+Press `q` to exit the video window.
 
 ## Requirements
 
-Install dependencies with:
+Install dependencies:
 
 ```
 pip install -r requirements.txt
 ```
 
-Main dependencies:
+### Main dependencies
+
 - torch
 - torchvision
-- opencv-python
 - ultralytics
+- opencv-python
 - pillow
 - tqdm
-
 
 ## Sample Results
 

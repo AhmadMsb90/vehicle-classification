@@ -1,57 +1,67 @@
 import torch
 from tqdm import tqdm
-from src.config import DEVICE
+from torch import nn, optim
 
-class Trainer:
-    def __init__(self, model, dataloaders, criterion, optimizer):
-        self.model = model.to(DEVICE)
-        self.dataloaders = dataloaders
-        self.criterion = criterion
-        self.optimizer = optimizer
+# function trains a model using train and validation loaders, then saves weights
+def train_model(model, train_loader, val_loader, device, epochs, save_path):
 
-    def train(self, epochs):
-        for epoch in range(epochs):
-            print(f"\nEpoch {epoch+1}/{epochs}")
-            self._train_epoch()
-            self._validate()
+    # move model to device
+    model = model.to(device)
 
-    def _train_epoch(self):
-        self.model.train()
-        running_loss = 0.0
+    # define loss function and optimizer
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.fc.parameters(), lr=1e-3)
 
-        loader = tqdm(self.dataloaders['train'], desc="Training")
+    # loop over epochs
+    for epoch in range(epochs):
+        print(f"\nEpoch {epoch+1}/{epochs}")
 
-        for images, labels in loader:
-            images, labels = images.to(DEVICE), labels.to(DEVICE)
+        # train phase
+        model.train()
+        total_loss = 0
 
-            self.optimizer.zero_grad()
-            outputs = self.model(images)
-            loss = self.criterion(outputs, labels)
+        # iterate over training batches with progress bar
+        for x, y in tqdm(train_loader):
+            x, y = x.to(device), y.to(device)
 
+            # reset gradients
+            optimizer.zero_grad()
+
+            # forward pass
+            out = model(x)
+
+            # compute loss
+            loss = criterion(out, y)
+
+            # backpropagation
             loss.backward()
-            self.optimizer.step()
 
-            running_loss += loss.item()
-            loader.set_postfix(loss=loss.item())
+            # update weights
+            optimizer.step()
 
-        print("Train Loss:", running_loss / len(self.dataloaders['train']))
+            # accumulate loss
+            total_loss += loss.item()
 
-    def _validate(self):
-        self.model.eval()
+        print("Train Loss:", total_loss / len(train_loader))
+
+        # validation phase
+        model.eval()
         correct, total = 0, 0
 
-        loader = tqdm(self.dataloaders['val'], desc="Validation")
-
+        # disable gradient computation
         with torch.no_grad():
-            for images, labels in loader:
-                images, labels = images.to(DEVICE), labels.to(DEVICE)
+            for x, y in val_loader:
+                x, y = x.to(device), y.to(device)
 
-                outputs = self.model(images)
-                _, preds = torch.max(outputs, 1)
+                # get predictions
+                preds = model(x).argmax(1)
 
-                total += labels.size(0)
-                correct += (preds == labels).sum().item()
+                # count correct predictions
+                correct += (preds == y).sum().item()
+                total += y.size(0)
 
-                loader.set_postfix(acc=100 * correct / total)
+        print("Val Acc:", 100 * correct / total)
 
-        print("Validation Accuracy:", 100 * correct / total)
+    # save trained model weights
+    torch.save(model.state_dict(), save_path)
+    print("Saved:", save_path)

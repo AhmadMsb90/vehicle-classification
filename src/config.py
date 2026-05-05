@@ -2,12 +2,25 @@ import torch
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-DATA_DIR = "data/dataset_level1"
-MODEL_PATH = "models/light_heavy_model.pth"
-YOLO_MODEL = "models/yolov8n.pt"
-VIDEO_PATH = "data/videos/M2U00107.mp4"
+# paths
+DATA_DIR = "data"
+MODEL_DIR = "models"
 
-BATCH_SIZE = 8
+LEVEL1_DATA = f"{DATA_DIR}/dataset_level1"
+LEVEL2_DATA = f"{DATA_DIR}/dataset_level2"
+
+YOLO_WEIGHTS = f"{MODEL_DIR}/yolov8n.pt"
+LEVEL1_WEIGHTS = f"{MODEL_DIR}/light_heavy_model.pth"
+LEVEL2_WEIGHTS = f"{MODEL_DIR}/level2_vehicle_model.pth"
+
+# training
+IMG_SIZE = 224
+BATCH_SIZE = 32
+LR = 1e-3
 EPOCHS = 5
-LR = 0.001
-NUM_CLASSES = 2
+
+CLASS_NAMES_LEVEL2 = [
+    'Mazda_2000', 'Nissan_Zamiad', 'Peugeot_206', 'Peugeot_207',
+    'Peugeot_405', 'Peugeot_Pars', 'Peykan', 'Pride-131',
+    'Pride_111', 'Quik', 'Renault_L90', 'Samand', 'Tiba2'
+]

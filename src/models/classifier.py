@@ -1,15 +1,18 @@
 import torch.nn as nn
-from torchvision import models
-from src.config import NUM_CLASSES
+from torchvision.models import resnet18, ResNet18_Weights
 
-def get_model(pretrained=True):
-    model = models.resnet18(pretrained=pretrained)
+# builds a resnet18 model with frozen layers and a new classification head
+def build_resnet(num_classes):
+    # load default pretrained weights
+    weights = ResNet18_Weights.DEFAULT
+    model = resnet18(weights=weights)
 
-    for param in model.parameters():
-        param.requires_grad = False
+    # freeze all backbone parameters
+    for p in model.parameters():
+        p.requires_grad = False
 
-    num_features = model.fc.in_features
-    model.fc = nn.Linear(num_features, NUM_CLASSES)
+    # replace final fully connected layer with new classifier
+    model.fc = nn.Linear(model.fc.in_features, num_classes)
 
+    # return configured model
     return model
-
